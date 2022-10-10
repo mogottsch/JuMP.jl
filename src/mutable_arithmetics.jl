@@ -267,8 +267,12 @@ const _AffineLike = Union{AbstractVariableRef,GenericAffExpr,_Constant}
 function _MA.add_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.add_mul, typeof(lhs), typeof(x), typeof(y))
     expr = _MA.operate(convert, T, lhs)
-    return _MA.operate!(_MA.add_mul, expr, x, y)
+    if _MA.mutability(T) == _MA.IsMutable()
+        return _MA.operate!(_MA.add_mul, expr, x, y)
+    end
+    return expr + _MA.operate(*, x, y)
 end
+
 function _MA.add_mul(
     lhs::AbstractJuMPScalar,
     x::_Scalar,
@@ -283,13 +287,21 @@ function _MA.add_mul(
         typeof.(args)...,
     )
     expr = _MA.operate(convert, T, lhs)
-    return _MA.operate!(_MA.add_mul, expr, x, y, args...)
+    if _MA.mutability(T) == _MA.IsMutable()
+        return _MA.operate!(_MA.add_mul, expr, x, y, args...)
+    end
+    return expr + _MA.operate(*, x, y, args...)
 end
+
 function _MA.sub_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.sub_mul, typeof(lhs), typeof(x), typeof(y))
     expr = _MA.operate(convert, T, lhs)
-    return _MA.operate!(_MA.sub_mul, expr, x, y)
+    if _MA.mutability(T) == _MA.IsMutable()
+        return _MA.operate!(_MA.sub_mul, expr, x, y)
+    end
+    return expr - _MA.operate(*, x, y)
 end
+
 function _MA.sub_mul(
     lhs::AbstractJuMPScalar,
     x::_Scalar,
@@ -304,5 +316,8 @@ function _MA.sub_mul(
         typeof.(args)...,
     )
     expr = _MA.operate(convert, T, lhs)
-    return _MA.operate!(_MA.sub_mul, expr, x, y, args...)
+    if _MA.mutability(T) == _MA.IsMutable()
+        return _MA.operate!(_MA.sub_mul, expr, x, y, args...)
+    end
+    return expr - _MA.operate(*, x, y, args...)
 end

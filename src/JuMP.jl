@@ -1398,6 +1398,7 @@ include("lp_sensitivity2.jl")
 include("callbacks.jl")
 include("file_formats.jl")
 include("feasibility_checker.jl")
+include("nlp_expr.jl")
 
 # MOI contains a number of Enums that are often accessed by users such as
 # `MOI.OPTIMAL`. This piece of code re-exports them from JuMP so that users can
