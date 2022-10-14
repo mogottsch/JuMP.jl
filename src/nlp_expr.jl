@@ -120,19 +120,18 @@ end
 #
 # However, ifelse is a builtin, so we can't add methods to it.
 
-_to_float(x) = x
-_to_float(x::Real) = convert(Float64, x)
-
 # We need only very generic fallbacks for these, because all other cases are
 # caught with more specific methods.
 for f in (:+, :-, :*, :^, :/, :atan)
     op = Meta.quot(f)
     @eval begin
-        function Base.$(f)(x::AbstractJuMPScalar, y::_Scalar)
-            return NonlinearExpr($op, x, _to_float(y))
+        function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)
+            rhs = convert(Float64, _constant_to_number(y))
+            return NonlinearExpr($op, x, rhs)
         end
-        function Base.$(f)(x::_Scalar, y::AbstractJuMPScalar)
-            return NonlinearExpr($op, _to_float(x), y)
+        function Base.$(f)(x::_Constant, y::AbstractJuMPScalar)
+            lhs = convert(Float64, _constant_to_number(x))
+            return NonlinearExpr($op, lhs, y)
         end
         function Base.$(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
             return NonlinearExpr($op, x, y)
@@ -151,7 +150,7 @@ end
 function add_constraint(
     model::Model,
     con::ScalarConstraint{NonlinearExpr,S},
-    ::String,  # Name is not used in nonlinear constraints.
+    name::String,
 ) where {
     S<:Union{
         MOI.LessThan{Float64},
@@ -162,7 +161,49 @@ function add_constraint(
 }
     nlp = nonlinear_model(model; force = true)
     index = MOI.Nonlinear.add_constraint(nlp, con.func, con.set)
-    return ConstraintRef(model, index, ScalarShape())
+    con_ref = ConstraintRef(model, index, ScalarShape())
+    set_name(con_ref, name)
+    return con_ref
+end
+
+function constraint_object(c::NonlinearConstraintRef)
+    nlp = nonlinear_model(c.model)
+    data = nlp.constraints[index(c)]
+    return ScalarConstraint(jump_function(c.model, data.expression), data.set)
+end
+
+function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
+    nlp = nonlinear_model(model)
+    parsed = Vector{Any}(undef, length(expr.nodes))
+    adj = MOI.Nonlinear.adjacency_matrix(expr.nodes)
+    rowvals = SparseArrays.rowvals(adj)
+    for i in length(expr.nodes):-1:1
+        node = expr.nodes[i]
+        parsed[i] = if node.type == MOI.Nonlinear.NODE_CALL_UNIVARIATE
+            NonlinearExpr(
+                nlp.operators.univariate_operators[node.index],
+                parsed[rowvals[SparseArrays.nzrange(adj, i)[1]]],
+            )
+        elseif node.type == MOI.Nonlinear.NODE_CALL_MULTIVARIATE
+            NonlinearExpr(
+                nlp.operators.multivariate_operators[node.index],
+                Any[parsed[rowvals[j]] for j in SparseArrays.nzrange(adj, i)],
+            )
+        elseif node.type == MOI.Nonlinear.NODE_MOI_VARIABLE
+            VariableRef(model, MOI.VariableIndex(node.index))
+        elseif node.type == MOI.Nonlinear.NODE_PARAMETER
+            NonlinearParameter(model, node.index)
+        elseif node.type == MOI.Nonlinear.NODE_SUBEXPRESSION
+            NonlinearExpression(model, node.index)
+        elseif node.type == MOI.Nonlinear.NODE_VALUE
+            expr.values[node.index]
+        else
+            # node.type == MOI.Nonlinear.NODE_COMPARISON
+            # node.type == MOI.Nonlinear.NODE_LOGIC
+            error("Unsupported node")
+        end
+    end
+    return parsed[1]
 end
 
 # MutableArithmetics.jl
