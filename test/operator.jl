@@ -409,10 +409,7 @@ function test_basic_operators_affexpr(ModelType, ::Any)
     # 4-4 AffExpr--QuadExpr
     @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
     @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
-    @test_expression_with_string(
-        aff2 * q,
-        "*(1.2 y + 1.2, 2.5 y*z + 7.1 x + 2.5)",
-    )
+    @test_expression_with_string aff2 * q "*(1.2 y + 1.2, 2.5 y*z + 7.1 x + 2.5)"
     @test_expression_with_string aff2 / q "/(1.2 y + 1.2, 2.5 y*z + 7.1 x + 2.5)"
     @test transpose(aff) === aff
     @test conj(aff) === aff
@@ -447,18 +444,12 @@ function test_basic_operators_quadexpr(ModelType, ::Any)
     # 4-3 QuadExpr--AffExpr
     @test_expression_with_string q + aff2 "2.5 y*z + 7.1 x + 1.2 y + 3.7"
     @test_expression_with_string q - aff2 "2.5 y*z + 7.1 x - 1.2 y + 1.3"
-    @test_expression_with_string(
-        q * aff2,
-        "*(2.5 y*z + 7.1 x + 2.5, 1.2 y + 1.2)",
-    )
+    @test_expression_with_string q * aff2 "*(2.5 y*z + 7.1 x + 2.5, 1.2 y + 1.2)"
     @test_expression_with_string q / aff2 "/(2.5 y*z + 7.1 x + 2.5, 1.2 y + 1.2)"
     # 4-4 QuadExpr--QuadExpr
     @test_expression_with_string q + q2 "2.5 y*z + 8 x*z + 7.1 x + 1.2 y + 3.7"
     @test_expression_with_string q - q2 "2.5 y*z - 8 x*z + 7.1 x - 1.2 y + 1.3"
-    @test_expression_with_string(
-        q * q2,
-        "*(2.5 y*z + 7.1 x + 2.5, 8 x*z + 1.2 y + 1.2)",
-    )
+    @test_expression_with_string q * q2 "*(2.5 y*z + 7.1 x + 2.5, 8 x*z + 1.2 y + 1.2)"
     @test_expression_with_string q / q2 "/(2.5 y*z + 7.1 x + 2.5, 8 x*z + 1.2 y + 1.2)"
     @test transpose(q) === q
     @test conj(q) === q
