@@ -1,3 +1,4 @@
+
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -299,17 +300,17 @@ function test_basic_operators_number(ModelType, ::Any)
     @test_expression_with_string 4.13 + w "w + 4.13"
     @test_expression_with_string 3.16 - w "-w + 3.16"
     @test_expression_with_string 5.23 * w "5.23 w"
-    @test 2.94 / w isa NonlinearExpr
+    @test_expression_with_string 2.94 / w "/(2.94, w)"
     # 1-3 Number--AffExpr
     @test_expression_with_string 1.5 + aff "7.1 x + 4"
     @test_expression_with_string 1.5 - aff "-7.1 x - 1"
     @test_expression_with_string 2 * aff "14.2 x + 5"
-    @test 2 / aff isa NonlinearExpr
+    @test_expression_with_string 2 / aff "/(2.0, 7.1 x + 2.5)"
     # 1-4 Number--QuadExpr
     @test_expression_with_string 1.5 + q "2.5 y*z + 7.1 x + 4"
     @test_expression_with_string 1.5 - q "-2.5 y*z - 7.1 x - 1"
     @test_expression_with_string 2 * q "5 y*z + 14.2 x + 5"
-    @test 2 / q isa NonlinearExpr
+    @test_expression_with_string 2 / q "/(2.0, 2.5 y*z + 7.1 x + 2.5)"
 end
 
 function test_basic_operators_variable(ModelType, ::Any)
@@ -342,20 +343,20 @@ function test_basic_operators_variable(ModelType, ::Any)
     @test_expression_with_string w - x "w - x"
     @test_expression_with_string w * x "w*x"
     @test_expression_with_string x - x "0"
-    @test w / x isa NonlinearExpr
+    @test_expression_with_string w / x "/(w, x)"
     @test_expression_with_string y * z - x "y*z - x"
     # 2-3 Variable--AffExpr
     @test_expression_with_string z + aff "z + 7.1 x + 2.5"
     @test_expression_with_string z - aff "z - 7.1 x - 2.5"
     @test_expression_with_string z * aff "7.1 z*x + 2.5 z"
-    @test z / aff isa NonlinearExpr
+    @test_expression_with_string z / aff "/(z, 7.1 x + 2.5)"
     @test_throws MethodError z ≤ aff
     @test_expression_with_string 7.1 * x - aff "0 x - 2.5"
     # 2-4 Variable--QuadExpr
     @test_expression_with_string w + q "2.5 y*z + w + 7.1 x + 2.5"
     @test_expression_with_string w - q "-2.5 y*z + w - 7.1 x - 2.5"
     @test_expression_with_string w * q "*(w, 2.5 y*z + 7.1 x + 2.5)"
-    @test w / q isa NonlinearExpr
+    @test_expression_with_string w / q "/(w, 2.5 y*z + 7.1 x + 2.5)"
     @test transpose(x) === x
     @test conj(x) === x
 end
@@ -396,14 +397,14 @@ function test_basic_operators_affexpr(ModelType, ::Any)
     @test_expression_with_string aff + z "7.1 x + z + 2.5"
     @test_expression_with_string aff - z "7.1 x - z + 2.5"
     @test_expression_with_string aff * z "7.1 x*z + 2.5 z"
-    @test aff / z isa NonlinearExpr
+    @test_expression_with_string aff / z "/(7.1 x + 2.5, z)"
     @test_expression_with_string aff - 7.1 * x "0 x + 2.5"
     # 3-3 AffExpr--AffExpr
     @test_expression_with_string aff + aff2 "7.1 x + 1.2 y + 3.7"
     @test_expression_with_string aff - aff2 "7.1 x - 1.2 y + 1.3"
     @test_expression_with_string aff * aff2 "8.52 x*y + 3 y + 8.52 x + 3"
     @test string((x + x) * (x + 3)) == string((x + 3) * (x + x))  # Issue #288
-    @test aff / aff2 isa NonlinearExpr
+    @test_expression_with_string aff / aff2 "/(7.1 x + 2.5, 1.2 y + 1.2)"
     @test_expression_with_string aff - aff "0 x"
     # 4-4 AffExpr--QuadExpr
     @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
@@ -412,7 +413,7 @@ function test_basic_operators_affexpr(ModelType, ::Any)
         aff2 * q,
         "*(1.2 y + 1.2, 2.5 y*z + 7.1 x + 2.5)",
     )
-    @test aff2 / q isa NonlinearExpr
+    @test_expression_with_string aff2 / q "/(1.2 y + 1.2, 2.5 y*z + 7.1 x + 2.5)"
     @test transpose(aff) === aff
     @test conj(aff) === aff
 end
@@ -442,7 +443,7 @@ function test_basic_operators_quadexpr(ModelType, ::Any)
     @test_expression_with_string q + w "2.5 y*z + 7.1 x + w + 2.5"
     @test_expression_with_string q - w "2.5 y*z + 7.1 x - w + 2.5"
     @test_expression_with_string q * w "*(2.5 y*z + 7.1 x + 2.5, w)"
-    @test q / w isa NonlinearExpr
+    @test_expression_with_string q / w "/(2.5 y*z + 7.1 x + 2.5, w)"
     # 4-3 QuadExpr--AffExpr
     @test_expression_with_string q + aff2 "2.5 y*z + 7.1 x + 1.2 y + 3.7"
     @test_expression_with_string q - aff2 "2.5 y*z + 7.1 x - 1.2 y + 1.3"
@@ -450,7 +451,7 @@ function test_basic_operators_quadexpr(ModelType, ::Any)
         q * aff2,
         "*(2.5 y*z + 7.1 x + 2.5, 1.2 y + 1.2)",
     )
-    @test q / aff2 isa NonlinearExpr
+    @test_expression_with_string q / aff2 "/(2.5 y*z + 7.1 x + 2.5, 1.2 y + 1.2)"
     # 4-4 QuadExpr--QuadExpr
     @test_expression_with_string q + q2 "2.5 y*z + 8 x*z + 7.1 x + 1.2 y + 3.7"
     @test_expression_with_string q - q2 "2.5 y*z - 8 x*z + 7.1 x - 1.2 y + 1.3"
@@ -458,7 +459,7 @@ function test_basic_operators_quadexpr(ModelType, ::Any)
         q * q2,
         "*(2.5 y*z + 7.1 x + 2.5, 8 x*z + 1.2 y + 1.2)",
     )
-    @test q / q2 isa NonlinearExpr
+    @test_expression_with_string q / q2 "/(2.5 y*z + 7.1 x + 2.5, 8 x*z + 1.2 y + 1.2)"
     @test transpose(q) === q
     @test conj(q) === q
 end
