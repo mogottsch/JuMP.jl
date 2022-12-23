@@ -195,14 +195,16 @@ Base.imag(v::AbstractVariableRef) = zero(v)
 Base.abs2(v::AbstractVariableRef) = v^2
 
 """
-    VariableRef <: AbstractVariableRef
+    GenericVariableRef <: AbstractVariableRef
 
 Holds a reference to the model and the corresponding MOI.VariableIndex.
 """
-struct VariableRef <: AbstractVariableRef
-    model::Model
+struct GenericVariableRef{T} <: AbstractVariableRef
+    model::GenericModel
     index::MOI.VariableIndex
 end
+
+const VariableRef = GenericVariableRef{T}
 
 # `AbstractVariableRef` types must override the default `owner_model` if the field
 #  name is not `model`.
