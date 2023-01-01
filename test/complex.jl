@@ -12,7 +12,11 @@ module TestComplexNumberSupport
 
 using JuMP
 using Test
+
+import LinearAlgebra
 import MutableArithmetics
+import SparseArrays
+
 const MA = MutableArithmetics
 
 function runtests()
@@ -31,6 +35,10 @@ function test_complex_aff_expr()
     @variable(model, x)
     y = (1 + 2im) * x + 1
     @test typeof(y) == GenericAffExpr{Complex{Float64},VariableRef}
+    @test 1im + x == 1im + 1 * x
+    @test 1im + x == 1im + (1 + 0im) * x
+    @test 1im - x == -(1 + 0im)x + 1im
+    @test 1im - 1 * x == -1 * x + 1im
     return
 end
 
@@ -173,11 +181,11 @@ function test_complex_conj()
     @variable(model, x)
     @test conj(x) === x
     @test real(x) === x
-    @test imag(x) === x
+    @test imag(x) == 0
     real_aff = 2 * x + 3
     @test conj(real_aff) === real_aff
     @test real(real_aff) === real_aff
-    @test imag(real_aff) === real_aff
+    @test imag(real_aff) == 0
     complex_aff = (2 + im) * x + 3 - im
     @test conj(complex_aff) == (2 - im) * x + 3 + im
     @test real(complex_aff) == 2x + 3
@@ -199,6 +207,58 @@ function test_complex_abs2()
     @test abs2(x + 2im) == x^2 + 4
     @test abs2(x + 2) == x^2 + 4x + 4
     @test abs2(x * im + 2) == x^2 + 4
+end
+
+function test_hermitian()
+    model = Model()
+    @variable(model, x)
+    A = [3 1im; -1im 2x]
+    @test A isa Matrix{GenericAffExpr{ComplexF64,VariableRef}}
+    A = [3x^2 1im; -1im 2x]
+    @test A isa Matrix{GenericQuadExpr{ComplexF64,VariableRef}}
+    A = [3x 1im; -1im 2x^2]
+    @test A isa Matrix{GenericQuadExpr{ComplexF64,VariableRef}}
+    A = [3x 1im; -1im 2x]
+    @test A isa Matrix{GenericAffExpr{ComplexF64,VariableRef}}
+    @test isequal_canonical(A', A)
+    H = LinearAlgebra.Hermitian(A)
+    T = GenericAffExpr{ComplexF64,VariableRef}
+    @test H isa LinearAlgebra.Hermitian{T,Matrix{T}}
+    @test isequal_canonical(A[1, 2], LinearAlgebra.adjoint(A[2, 1]))
+    @test isequal_canonical(H[1, 2], LinearAlgebra.adjoint(H[2, 1]))
+    for i in 1:2, j in 1:2
+        @test isequal_canonical(A[i, j], H[i, j])
+    end
+    return
+end
+
+function test_complex_sparse_arrays_dropzeros()
+    model = Model()
+    @variable(model, x)
+    a = 2.0 + 1.0im
+    for rhs in (0.0 + 0.0im, 0.0 - 0.0im, -0.0 + 0.0im, -0.0 + -0.0im)
+        # We need to explicitly set the .constant field to avoid a conversion to
+        # 0.0 + 0.0im
+        expr = a * x
+        expr.constant = rhs
+        @test isequal(SparseArrays.dropzeros(expr), a * x)
+        expr.constant = 1.0 + rhs
+        @test isequal(SparseArrays.dropzeros(expr), a * x + 1.0)
+    end
+    return
+end
+
+function test_complex_hermitian_constraint()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    H = LinearAlgebra.Hermitian(x)
+    @test vectorize(H, HermitianMatrixShape(2)) ==
+          [x[1, 1], x[1, 2], x[2, 2], 0.0]
+    @constraint(model, c, H in HermitianPSDCone())
+    @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
+    @test function_string(MIME("text/plain"), constraint_object(c)) ==
+          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+    return
 end
 
 end
