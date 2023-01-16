@@ -31,14 +31,14 @@ function _MA.promote_operation(
     C::Type{<:_Constant},
     V::Type{<:AbstractVariableRef},
 )
-    return GenericAffExpr{_float_type(C),V}
+    return GenericAffExpr{_complex_convert_type(value_type(V), C),V}
 end
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     V::Type{<:AbstractVariableRef},
     C::Type{<:_Constant},
 )
-    return GenericAffExpr{_float_type(C),V}
+    return GenericAffExpr{_complex_convert_type(value_type(V), C),V}
 end
 function _MA.promote_operation(
     op::Union{typeof(+),typeof(-),typeof(*)},

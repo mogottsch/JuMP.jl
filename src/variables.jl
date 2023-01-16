@@ -189,6 +189,9 @@ with variables of type `V<:AbstractVariableRef` and coefficients of type `T`
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
 variable_ref_type(v::AbstractVariableRef) = typeof(v)
+
+value_type(::Type{<:AbstractVariableRef}) = Float64
+
 Base.conj(v::AbstractVariableRef) = v
 Base.real(v::AbstractVariableRef) = v
 Base.imag(v::AbstractVariableRef) = zero(v)
@@ -205,6 +208,8 @@ struct GenericVariableRef{T} <: AbstractVariableRef
 end
 
 const VariableRef = GenericVariableRef{Float64}
+
+value_type(::Type{GenericVariableRef{T}}) where {T} = T
 
 # `AbstractVariableRef` types must override the default `owner_model` if the field
 #  name is not `model`.

@@ -55,14 +55,14 @@ end
 # _Constant--_GenericAffOrQuadExpr
 function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
-    T = _MA.promote_operation(+, _float_type(typeof(lhs)), typeof(rhs))
+    T = _MA.promote_operation(+, _complex_convert(value_type(typeof(rhs)), typeof(lhs)), typeof(rhs))
     result = _MA.mutable_copy(convert(T, rhs))
     add_to_expression!(result, lhs)
     return result
 end
 function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
-    T = _MA.promote_operation(+, _float_type(typeof(lhs)), typeof(rhs))
+    T = _MA.promote_operation(+, _complex_convert(value_type(typeof(rhs)), typeof(lhs)), typeof(rhs))
     result = convert(T, -rhs)
     add_to_expression!(result, lhs)
     return result
@@ -71,7 +71,7 @@ function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     if iszero(lhs)
         # If `lhs` is complex and `rhs` has real coefficients, `zero(rhs)` would not work
         return zero(
-            _MA.promote_operation(*, _float_type(typeof(lhs)), typeof(rhs)),
+            _MA.promote_operation(*, _complex_convert(value_type(typeof(rhs)), typeof(lhs)), typeof(rhs)),
         )
     else
         α = _constant_to_number(lhs)
@@ -383,7 +383,7 @@ LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = lhs * rhs
 LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = lhs * rhs
 
 function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Number})
-    return GenericAffExpr{_float_type(R),V}
+    return GenericAffExpr{_complex_convert_type(value_type(V), R),V}
 end
 function Base.promote_rule(
     V::Type{<:AbstractVariableRef},
