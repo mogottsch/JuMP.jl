@@ -57,7 +57,7 @@ function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
     T = _MA.promote_operation(
         +,
-        _complex_convert(value_type(typeof(rhs)), typeof(lhs)),
+        _complex_convert(value_type(variable_ref_type(rhs)), typeof(lhs)),
         typeof(rhs),
     )
     result = _MA.mutable_copy(convert(T, rhs))
@@ -68,7 +68,7 @@ function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
     T = _MA.promote_operation(
         +,
-        _complex_convert(value_type(typeof(rhs)), typeof(lhs)),
+        _complex_convert(value_type(variable_ref_type(rhs)), typeof(lhs)),
         typeof(rhs),
     )
     result = convert(T, -rhs)
@@ -81,7 +81,7 @@ function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
         return zero(
             _MA.promote_operation(
                 *,
-                _complex_convert(value_type(typeof(rhs)), typeof(lhs)),
+                _complex_convert(value_type(variable_ref_type(rhs)), typeof(lhs)),
                 typeof(rhs),
             ),
         )

@@ -130,10 +130,6 @@ variable type `V` from a [`GenericAffExpr`](@ref)
 """
 variable_ref_type(::GenericAffExpr{C,V}) where {C,V} = V
 
-function value_type(::Type{A}) where {A<:GenericAffExpr}
-    return value_type(variable_ref_type(A))
-end
-
 """
     GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
 
