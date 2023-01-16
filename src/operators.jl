@@ -81,7 +81,10 @@ function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
         return zero(
             _MA.promote_operation(
                 *,
-                _complex_convert(value_type(variable_ref_type(rhs)), typeof(lhs)),
+                _complex_convert(
+                    value_type(variable_ref_type(rhs)),
+                    typeof(lhs),
+                ),
                 typeof(rhs),
             ),
         )
