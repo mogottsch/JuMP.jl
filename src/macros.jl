@@ -661,8 +661,8 @@ function build_constraint(
         _error,
         func,
         MOI.Interval(
-            convert(value_type(func), lb),
-            convert(value_type(func), ub),
+            convert(value_type(variable_ref_type(func)), lb),
+            convert(value_type(variable_ref_type(func)), ub),
         ),
     )
 end
@@ -700,7 +700,7 @@ function build_constraint(
     x::AbstractVector{T},
     set::MOI.SOS1,
 ) where {T<:AbstractJuMPScalar}
-    return VectorConstraint(x, MOI.SOS1{value_type(T)}(set.weights))
+    return VectorConstraint(x, MOI.SOS1{value_type(variable_ref_type(T))}(set.weights))
 end
 
 function build_constraint(
