@@ -37,15 +37,15 @@ end
 # _Constant--_Constant obviously already taken care of!
 # _Constant--VariableRef
 function Base.:+(lhs::_Constant, rhs::AbstractVariableRef)
-    constant = _float(lhs)
+    constant = _complex_convert(value_type(typeof(rhs)), lhs)
     return _build_aff_expr(constant, one(constant), rhs)
 end
 function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
-    constant = _float(lhs)
+    constant = _complex_convert(value_type(typeof(rhs)), lhs)
     return _build_aff_expr(constant, -one(constant), rhs)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
-    coef = _float(lhs)
+    coef = _complex_convert(value_type(typeof(rhs)), lhs)
     if iszero(coef)
         return zero(GenericAffExpr{typeof(coef),typeof(rhs)})
     else
