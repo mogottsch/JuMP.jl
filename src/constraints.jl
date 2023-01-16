@@ -901,14 +901,15 @@ con : [x + y + 1, x + 2, y + 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
 
 """
-function add_to_function_constant(
-    constraint::ConstraintRef{M},
-    value,
-) where {M}
+function add_to_function_constant(constraint::ConstraintRef{M}, value) where {M}
     model = owner_model(constraint)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_add_to_function_constant`) to improve performance.
-    _moi_add_to_function_constant(backend(model), index(constraint), _complex_convert(value_type(M), value))
+    _moi_add_to_function_constant(
+        backend(model),
+        index(constraint),
+        _complex_convert(value_type(M), value),
+    )
     model.is_model_dirty = true
     return
 end
@@ -940,7 +941,10 @@ function value(
     con_ref::ConstraintRef{M,<:MOI.ConstraintIndex};
     result::Int = 1,
 ) where {M}
-    return reshape_vector(_constraint_primal(con_ref, result, value_type(M)), con_ref.shape)
+    return reshape_vector(
+        _constraint_primal(con_ref, result, value_type(M)),
+        con_ref.shape,
+    )
 end
 
 """
@@ -969,7 +973,10 @@ function _constraint_primal(
     result::Int,
     ::Type{T},
 ) where {T}
-    return convert(T, MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref))
+    return convert(
+        T,
+        MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref),
+    )
 end
 function _constraint_primal(
     con_ref::ConstraintRef{
@@ -982,7 +989,10 @@ function _constraint_primal(
     result,
     ::Type{T},
 ) where {T}
-    return convert(Vector{T}, MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref))
+    return convert(
+        Vector{T},
+        MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref),
+    )
 end
 
 """
@@ -1008,7 +1018,7 @@ Use `has_dual` to check if a result exists before asking for values.
 See also: [`result_count`](@ref), [`shadow_price`](@ref).
 """
 function dual(
-    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON};
+    con_ref::ConstraintRef{M,<:MOI.ConstraintIndex};
     result::Int = 1,
 ) where {M}
     return reshape_vector(
@@ -1028,8 +1038,11 @@ function _constraint_dual(
     },
     result::Int,
     ::Type{T},
-)
-    return convert(T, MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref))
+) where {T}
+    return convert(
+        T,
+        MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref),
+    )
 end
 function _constraint_dual(
     con_ref::ConstraintRef{
@@ -1041,8 +1054,11 @@ function _constraint_dual(
     },
     result::Int,
     ::Type{T},
-)
-    return convert(Vector{T}, MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref))
+) where {T}
+    return convert(
+        Vector{T},
+        MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref),
+    )
 end
 
 """
@@ -1506,6 +1522,9 @@ function relax_with_penalty!(
     )
 end
 
-function relax_with_penalty!(model::GenericModel{T}; default::Real = one(T)) where {T}
+function relax_with_penalty!(
+    model::GenericModel{T};
+    default::Real = one(T),
+) where {T}
     return relax_with_penalty!(model, Dict(); default = default)
 end

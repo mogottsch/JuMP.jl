@@ -165,7 +165,7 @@ end
 
 value_type(::Type{GenericModel{T}}) where {T} = T
 
-function Base.getproperty(model::Model, name::Symbol)
+function Base.getproperty(model::GenericModel, name::Symbol)
     if name == :nlp_data
         error(
             "The internal field `.nlp_data` was removed from `Model` in JuMP " *
@@ -504,7 +504,11 @@ function _moi_add_bridge(
     return
 end
 
-function _moi_add_bridge(::MOI.ModelLike, ::Type{<:MOI.Bridges.AbstractBridge}, ::Type)
+function _moi_add_bridge(
+    ::MOI.ModelLike,
+    ::Type{<:MOI.Bridges.AbstractBridge},
+    ::Type,
+)
     return error(
         "Cannot add bridge if `add_bridges` was set to `false` in the `Model` ",
         "constructor.",
@@ -515,7 +519,7 @@ function _moi_add_bridge(
     bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
     ::Type{T},
-)
+) where {T}
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{T})
     return
 end
@@ -524,7 +528,7 @@ function _moi_add_bridge(
     caching_opt::MOIU.CachingOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
     ::Type{T},
-)
+) where {T}
     _moi_add_bridge(caching_opt.optimizer, BridgeType, T)
     return
 end

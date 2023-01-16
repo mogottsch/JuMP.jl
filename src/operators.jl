@@ -11,12 +11,19 @@
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
 
 _complex_convert_type(::Type{T}, ::Type{<:Real}) where {T} = T
-_complex_convert_type(::Type{T}, ::Type{<:LinearAlgebra.UniformScaling{S}}) where {S} = _complex_convert(T, S)
+function _complex_convert_type(
+    ::Type{T},
+    ::Type{<:LinearAlgebra.UniformScaling{S}},
+) where {T,S}
+    return _complex_convert(T, S)
+end
 _complex_convert_type(::Type{T}, ::Type{<:Complex}) where {T} = Complex{T}
 
 _complex_convert(::Type{T}, x::Real) where {T} = convert(T, x)
 _complex_convert(::Type{T}, x::Complex) where {T} = convert(Complex{T}, x)
-_complex_convert(::Type{T}, J::LinearAlgebra.UniformScaling) where {T} = _complex_convert(T, J.λ)
+function _complex_convert(::Type{T}, J::LinearAlgebra.UniformScaling) where {T}
+    return _complex_convert(T, J.λ)
+end
 
 # Overloads
 #

@@ -660,7 +660,10 @@ function build_constraint(
     return build_constraint(
         _error,
         func,
-        MOI.Interval(convert(value_type(func), lb), convert(value_type(func), ub)),
+        MOI.Interval(
+            convert(value_type(func), lb),
+            convert(value_type(func), ub),
+        ),
     )
 end
 
